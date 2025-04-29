@@ -112,7 +112,6 @@
       - id: HolofanProjector
       - id: RCD
       - id: RCDAmmo
-      - id: ClothingShoesBootsMagAtmos
 
 - type: entity
   id: LockerEngineerFilledHardsuit
