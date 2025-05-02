@@ -44,3 +44,22 @@
     stealGroup: SupermatterSliver
     objectiveNoOwnerText: objective-condition-steal-supermatter-sliver
     descriptionText: objective-description-steal-supermatter-sliver
+
+  - type: entity
+  abstract: true
+  parent: BaseTraitorStealObjective
+  id: BaseREPRstealObjective
+  components:
+  - type: NotJobRequirement
+    job: NanoTrasenRepresentative
+  - type: StealCondition
+    owner: job-name-ntrep
+
+  - type: entity
+  parent: BaseREPRstealObjective
+  id: REPRhandheldFaxStealObjective
+  components:
+  - type: StealCondition
+    stealGroup: HandheldFax
+    owner: objective-condition-steal-HandHeld-Fax
+    descriptionText: objective-description-steal-handheldFax
