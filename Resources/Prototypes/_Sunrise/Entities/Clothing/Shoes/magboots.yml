@@ -63,6 +63,8 @@
   - type: ApcPowerReceiver
     needsPower: false
     powerLoad: 0
+  - type: Item
+    size: Huge
   - type: Charger
     slotId: charger_slot
     portable: true
