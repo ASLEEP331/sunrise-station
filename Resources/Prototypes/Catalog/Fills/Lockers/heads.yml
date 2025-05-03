@@ -167,7 +167,6 @@
       prob: 0.15
     - id: ClothingBeltChiefEngineerFilled
     - id: ClothingEyesGlassesMeson
-    - id: ClothingHandsGlovesColorYellow
     - id: ClothingHeadsetAltEngineering
     - id: DoorRemoteEngineering
     - id: CargoRequestEngineeringComputerCircuitboard
@@ -175,6 +174,7 @@
     - id: RCDAmmo
     - id: RubberStampCE
     - id: FlippoLighterSunriseCe  # Sunrise-Flippo
+    - id: InsulatedGlovesAtmos #sunrise-edit
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable
