@@ -148,11 +148,14 @@
     sprite: _Sunrise/Clothing/Hands/Gloves/insulated_gloves.rsi
   - type: Insulated
     preventOpperatinGuns: true
-  - type: Armor
-    modifiers:
-      coefficients:
-        Heat: 0.95
-        Cold: 0.95
   - type: TemperatureProtection
-    heatingCoefficient: 1.1
-    coolingCoefficient: 0.1
+    heatingCoefficient: 1.050
+    coolingCoefficient: 0.2
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: ClothingHandsGlovesFingerlessInsulated
+  - type: Fiber
+    fiberMaterial: fibers-insulative
+    fiberColor: fibers-blue
+  - type: FingerprintMask
