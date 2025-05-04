@@ -193,5 +193,5 @@
     tags:
     - HighRiskItem
   - type: StealTarget
-    stealGroup: Handheld fax
+    stealGroup: HandheldFax
 # sunrise-end
