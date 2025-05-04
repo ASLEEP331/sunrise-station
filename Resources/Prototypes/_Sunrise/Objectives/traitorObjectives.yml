@@ -47,12 +47,12 @@
 
 - type: entity
   parent: BaseTraitorStealObjective
-  id: HandledFaxStealObjective
+  id: HandheldFaxStealObjective
   components:
   - type: Objective
     difficulty: 1.5
   - type: NotJobRequirement
     job: NanoTrasenRepresentative
   - type: StealCondition
-  stealGroup: WeaponEnergyGunMultiphase
+    stealGroup: HandheldFax
     owner: job-name-ntrep
