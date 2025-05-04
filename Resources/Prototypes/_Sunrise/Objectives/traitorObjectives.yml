@@ -45,11 +45,12 @@
     objectiveNoOwnerText: objective-condition-steal-supermatter-sliver
     descriptionText: objective-description-steal-supermatter-sliver
 
-  - type: entity
-  abstract: true
+- type: entity
   parent: BaseTraitorStealObjective
   id: BaseREPRstealObjective
   components:
+  - type: Objective
+    difficulty: 1.5
   - type: NotJobRequirement
     job: NanoTrasenRepresentative
   - type: StealCondition
