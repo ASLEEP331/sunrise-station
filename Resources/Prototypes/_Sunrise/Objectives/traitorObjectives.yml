@@ -54,12 +54,3 @@
     job: NanoTrasenRepresentative
   - type: StealCondition
     owner: job-name-ntrep
-
-  - type: entity
-  parent: BaseREPRstealObjective
-  id: REPRhandheldFaxStealObjective
-  components:
-  - type: StealCondition
-    stealGroup: HandheldFax
-    owner: objective-condition-steal-HandHeld-Fax
-    descriptionText: objective-description-steal-handheldFax
