@@ -43,8 +43,9 @@
   equipment:
     eyes: ClothingEyesGlassesJensen
 
-# sunrise-edit
+# sunrise-start
 - type: loadout
   id: GlassesStuttering
   equipment:
     eyes: ClothingEyesStuttering
+# sunrise-end
