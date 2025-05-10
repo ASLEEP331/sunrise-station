@@ -42,3 +42,9 @@
     proto: JensenTimer
   equipment:
     eyes: ClothingEyesGlassesJensen
+
+# sunrise-edit
+- type: loadout
+  id: GlassesStuttering
+  equipment:
+    eyes: ClothingEyesStuttering
