@@ -5,6 +5,9 @@
   id: BaseMobVulpkanin
   abstract: true
   components:
+  # SUNRISE EDIT
+  - type: Interactions
+  # SUNRISE EDIT
   - type: Absorbable
   - type: Speech
     speechVerb: Vulpkanin
@@ -89,6 +92,8 @@
         Blunt: 2
         Slash: 3
   - type: Carriable
+  - type: ToggleableNightVision
+    effect: EffectNightVisioSpecies
 
 
 - type: entity
