@@ -4,7 +4,7 @@
   name: backpack
   description: You wear this on your back and put items into it.
   components:
-  - type: ContainerInteractionAnimation # Sunrise added
+  - type: ContainerInteractionAnimation # Sunrise-Edit
   - type: Sprite
     sprite: Clothing/Back/Backpacks/backpack.rsi
     state: icon
@@ -31,11 +31,18 @@
     delay: 0.5
   - type: ExplosionResistance
     damageCoefficient: 0.9
-  - type: FelinidContainer
+  - type: NestingContainer # Sunrise-Edit
   - type: Tag
     tags:
     - WhitelistChameleon
     - Backpack
+  # Sunrise-start
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 25
+      Plastic: 25
+      Cloth: 500
+  # Sunrise-end
 
 - type: entity
   parent: ClothingBackpack
@@ -48,6 +55,12 @@
   - type: Storage
     storageOpenSound:
       collection: BikeHorn
+      params:
+        variation: 0.125
+    storageInsertSound:
+      collection: FootstepClown
+      params:
+        variation: 0.125
 
 - type: entity
   parent: ClothingBackpack
@@ -68,7 +81,7 @@
   description: It's a very robust backpack.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/security.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/security.rsi #Sunrise-Edit
 
 - type: entity
   parent: [ClothingBackpack, BaseSecurityContraband]
@@ -123,6 +136,9 @@
   components:
   - type: Sprite
     sprite: Clothing/Back/Backpacks/mime.rsi
+  - type: Storage
+    storageOpenSound: null
+    storageInsertSound: null
 
 - type: entity
   parent: ClothingBackpack
@@ -204,7 +220,7 @@
   description: A spacious backpack with lots of pockets, worn by the Commander of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/ertleader.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/ertleader.rsi # Sunrise-Edit
   - type: Storage
     grid:
     - 0,0,10,3
@@ -216,7 +232,7 @@
   description: A spacious backpack with lots of pockets, worn by Security Officers of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/ertsec.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/ertsec.rsi # Sunrise-Edit
 
 - type: entity
   parent: ClothingBackpackERTLeader
@@ -225,7 +241,7 @@
   description: A spacious backpack with lots of pockets, worn by Medical Officers of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/ertmed.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/ertmed.rsi # Sunrise-Edit
 
 - type: entity
   parent: ClothingBackpackERTLeader
@@ -234,7 +250,7 @@
   description: A spacious backpack with lots of pockets, worn by Engineers of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/erteng.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/erteng.rsi # Sunrise-Edit
 
 - type: entity
   parent: ClothingBackpackERTLeader
@@ -243,7 +259,7 @@
   description: A spacious backpack with lots of pockets, worn by Janitors of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/ertjanitor.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/ertjanitor.rsi # Sunrise-Edit
 
 - type: entity
   parent: ClothingBackpackERTLeader
@@ -252,7 +268,7 @@
   description: A spacious backpack with lots of pockets, worn by Clowns of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/ertclown.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/ertclown.rsi # Sunrise-Edit
 
 - type: entity
   parent: ClothingBackpackERTLeader
@@ -261,7 +277,7 @@
   description: A spacious backpack with lots of pockets, worn by Chaplains of an Emergency Response Team.
   components:
   - type: Sprite
-    sprite: Clothing/Back/Backpacks/ertchaplain.rsi
+    sprite: _Sunrise/Clothing/Back/Backpacks/ERT/ertchaplain.rsi # Sunrise-Edit
 
 - type: entity
   parent: ClothingBackpackERTSecurity
@@ -313,6 +329,15 @@
     maxItemSize: Huge
     grid:
     - 0,0,19,9
+  # Sunrise-start
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 1000
+      Silver: 300
+      Cloth: 500
+      Plasma: 600
+      Uranium: 40
+  # Sunrise-end
 
 - type: entity
   parent: ClothingBackpackClown
@@ -341,9 +366,9 @@
     equipDelay: 5 # to avoid accidentally falling into the trap associated with SelfUnremovableClothing
   - type: SelfUnremovableClothing
   - type: ShockOnTrigger
+    targetContainer: true
     damage: 5
     duration: 3
-    cooldown: 4
   - type: TriggerOnSignal
   - type: DeviceLinkSink
     ports:

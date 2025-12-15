@@ -1,15 +1,14 @@
 - type: entity
   id: BaseCartridgeHeavyRifle
-  name: cartridge (.20 rifle)
+  name: cartridge (.10 rifle)
   parent: [ BaseCartridge, BaseSecurityContraband ]
   abstract: true
   components:
   - type: Tag
     tags:
-      - Cartridge
       - CartridgeHeavyRifle
   - type: HitScanCartridgeAmmo
-    proto: BulletHeavyRifle
+    hitscan: BulletHeavyRifleTrace
   - type: Sprite
     sprite: Objects/Weapons/Guns/Ammunition/Casings/ammo_casing.rsi
     layers:
@@ -26,5 +25,5 @@
   parent: BaseCartridgeHeavyRifle
   components:
   - type: HitScanCartridgeAmmo
-    proto: BulletMinigun
+    hitscan: BulletMinigunTrace
     deleteOnSpawn: true

@@ -28,7 +28,7 @@
     mask: ClothingMaskGasERT
     eyes: ClothingEyesGlassesSecurity
     ears: ClothingHeadsetAltCentCom
-    gloves: ClothingHandsGlovesCombat
+    # gloves: ClothingHandsGlovesCombat #Sunrise-Edit
     outerClothing: ClothingOuterHardsuitCBURN
     shoes: ClothingShoesBootsCombatFilled
     id: CBURNPDA
@@ -42,6 +42,7 @@
     - GrenadeFlashBang
     - PillAmbuzolPlus
     - PillAmbuzol
+    - ClothingHandsPowerGlovesUplinkNTERTCBURN #Sunrise-Edit
 
 - type: chameleonOutfit
   id: CBURNChameleonOutfit
@@ -50,3 +51,32 @@
   equipment:
     head: ClothingHeadHelmetCBURN
     neck: ClothingNeckScarfStripedBrown
+
+# Sunrise-start
+- type: startingGear
+  id: CBURNGearEVA
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitColorBrown
+    back: ClothingBackpackDuffelCBURN
+    mask: ClothingMaskGasERT
+    eyes: ClothingEyesGlassesSecurity
+    ears: ClothingHeadsetAltCentCom
+    # gloves: ClothingHandsGlovesCombat
+    outerClothing: ClothingOuterSoftsuitCBURN
+    shoes: ClothingShoesBootsCombatFilled
+    id: CBURNPDA
+    pocket1: RadioHandheld
+    pocket2: WeaponLaserGun
+    belt: ClothingBeltSalvageWebbing
+    head: ClothingHeadSoftsuitCBURN
+  storage:
+    back:
+    - WeaponGunLaserCarbineAutomatic
+    - MagazineBatteryLr60
+    - MagazineBatteryLr60
+    - MagazineBatteryLr30
+    - GrenadeFlashBang
+    - PillAmbuzolPlus
+    - PillAmbuzol
+    - ClothingHandsPowerGlovesUplinkNTERTCBURN
+# Sunrise-end

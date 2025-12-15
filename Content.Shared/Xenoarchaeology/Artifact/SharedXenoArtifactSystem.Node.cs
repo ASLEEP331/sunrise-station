@@ -33,21 +33,14 @@ public abstract partial class SharedXenoArtifactSystem
         SetNodeDurability((ent, ent), nodeComponent.MaxDurability);
     }
 
-    /// <summary> Gets node component by node entity uid. </summary>
-    public XenoArtifactNodeComponent XenoArtifactNode(EntityUid uid)
-    {
-        return _nodeQuery.Get(uid);
-    }
-
     public void SetNodeUnlocked(Entity<XenoArtifactNodeComponent?> ent)
     {
         if (!Resolve(ent, ref ent.Comp))
             return;
 
-        if (ent.Comp.Attached is not { } netArtifact)
+        if (ent.Comp.Attached is not { } artifact)
             return;
 
-        var artifact = GetEntity(netArtifact);
         if (!TryComp<XenoArtifactComponent>(artifact, out var artifactComponent))
             return;
 
@@ -83,7 +76,13 @@ public abstract partial class SharedXenoArtifactSystem
         if (!Resolve(ent, ref ent.Comp))
             return;
 
-        ent.Comp.Durability = Math.Clamp(durability, 0, ent.Comp.MaxDurability);
+        if (ent.Comp.MaxDurability < 0)
+        {
+            Log.Warning($"Max durability to {ent.Comp.MaxDurability}, which is less than 0. Clamping to 0.");
+            ent.Comp.MaxDurability = Math.Abs(ent.Comp.MaxDurability);
+        }
+
+        ent.Comp.Durability = Math.Clamp(durability, 0, Math.Abs(ent.Comp.MaxDurability));
         UpdateNodeResearchValue((ent, ent.Comp));
         Dirty(ent);
     }
@@ -197,7 +196,10 @@ public abstract partial class SharedXenoArtifactSystem
             foreach (var netNode in segment)
             {
                 var node = GetEntity(netNode);
-                outSegment.Add((node, XenoArtifactNode(node)));
+                if (!_nodeQuery.TryComp(node, out var comp))
+                    continue;
+
+                outSegment.Add((node, comp));
             }
 
             output.Add(outSegment);
@@ -385,7 +387,7 @@ public abstract partial class SharedXenoArtifactSystem
             return;
         }
 
-        var artifact = _xenoArtifactQuery.Get(GetEntity(nodeComponent.Attached.Value));
+        var artifact = _xenoArtifactQuery.Get(nodeComponent.Attached.Value);
 
         var nonactiveNodes = GetActiveNodes(artifact);
         var durabilityEffect = MathF.Pow((float)nodeComponent.Durability / nodeComponent.MaxDurability, 2);

@@ -1,9 +1,9 @@
 - type: reaction
-  id: Aphrodesiac
+  id: Aphrodisiac
   minTemp: 120
   maxTemp: 300
   effects:
-  - !type:CreateEntityReactionEffect
+  - !type:SpawnEntity
     entity: EffectHearts
   priority: 100
   reactants:
@@ -14,4 +14,4 @@
     Wine:
       amount: 3
   products:
-    Aphrodesiac: 5
+    Aphrodisiac: 5

@@ -9,15 +9,20 @@
   metabolisms:
     Medicine:
       effects:
-      - !type:ModifyBleedAmount
+      - !type:ModifyBleed
         amount: -4.2
       - !type:HealthChange
         damage:
           groups:
             Brute: -3.2
       - !type:HealthChange
+        damage:
+          types:
+            Mangleness: 0.2
+      - !type:HealthChange
         conditions:
-        - !type:ReagentThreshold
+        - !type:ReagentCondition
+          reagent: HemostaticPowder
           min: 10.1
         damage:
           types:

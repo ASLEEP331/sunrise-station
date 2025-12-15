@@ -9,13 +9,14 @@ HeadOfSecurity-loadout = Снаряжение главы сб
 Quartermaster-loadout = Снаряжение квартирмейстра
 ResearchDirector-loadout = Снаряжение научного руководителя
 NanoTrasenRepresentative-loadout = Снаряжение представителя NanoTrasen
+ComMaid-loadout = Снаряжение горничной командования
 # Law
 IAA-loadout = Снаряжение агента внутренних дел
 Lawyer-loadout = Снаряжение юриста
 Magistrate-loadout = Снаряжение магистрата
 OfficerNTR-loadout = Снаряжение ИСН
 # Blueshield
-Blueshield-loadout = Снаряжение офицера «синий щит»
+Blueshield-loadout = Снаряжение офицера «Синий щит»
 # Security
 Brigmedic-loadout = Снаряжение бригмедика
 Detective-loadout = Снаряжение детектива

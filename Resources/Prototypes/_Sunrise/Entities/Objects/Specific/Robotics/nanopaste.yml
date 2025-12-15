@@ -14,6 +14,7 @@
   - type: Item
     heldPrefix: nanopaste
   - type: Healing
+    delay: 2
     damageContainers:
     - Mech
     - Synth
@@ -25,6 +26,7 @@
         Blunt: -10
         Slash: -10
         Piercing: -10
+        Mangleness: -10
     healingBeginSound:
       path: "/Audio/Items/Medical/ointment_begin.ogg"
     healingEndSound:
@@ -43,12 +45,3 @@
   - type: Stack
     stackType: Nanopaste
     count: 1
-
-- type: entity
-  id: Nanopaste10
-  parent: Nanopaste
-  suffix: Full
-  components:
-  - type: Stack
-    stackType: Nanopaste
-    count: 10

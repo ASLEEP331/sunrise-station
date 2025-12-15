@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Robust.Shared.Log;
 using Content.Client.Humanoid;
 using Content.Client.Lobby.UI.Loadouts;
 using Content.Client.Lobby.UI.Roles;
@@ -108,8 +109,7 @@ namespace Content.Client.Lobby.UI
 
         private bool _isDirty;
 
-        [ValidatePrototypeId<GuideEntryPrototype>]
-        private const string DefaultSpeciesGuidebook = "Species";
+        private static readonly ProtoId<GuideEntryPrototype> DefaultSpeciesGuidebook = "Species";
 
         public event Action<List<ProtoId<GuideEntryPrototype>>>? OnOpenGuidebook;
 
@@ -253,6 +253,10 @@ namespace Content.Client.Lobby.UI
 
             #endregion
 
+            // Sunrise: Инициализируем градиентные контролы ПЕРЕД RefreshSpecies
+            InitializeHairGradientControls(); //Sunrise
+            InitializeAllMarkingsGradientControls(); //Sunrise
+
             RefreshSpecies();
 
             SpeciesButton.OnItemSelected += args =>
@@ -263,6 +267,54 @@ namespace Content.Client.Lobby.UI
                 OnSkinColorOnValueChanged();
             };
 
+            //Sunrise start
+            #region Size
+            UpdateSizeControls();
+
+            WidthSlider.OnValueChanged += args =>
+            {
+                UpdateSizeText();
+            };
+
+            HeightSlider.OnValueChanged += args =>
+            {
+                UpdateSizeText();
+            };
+
+            WidthSlider.OnReleased += args =>
+            {
+                SetWidth(args.Value);
+            };
+
+            HeightSlider.OnReleased += args =>
+            {
+                SetHeight(args.Value);
+            };
+
+            WidthResetButton.OnPressed += _ =>
+            {
+                if (Profile is null)
+                {
+                    return;
+                }
+
+                ResetWidth();
+                ReloadPreview();
+            };
+
+            HeightResetButton.OnPressed += _ =>
+            {
+                if (Profile is null)
+                {
+                    return;
+                }
+
+                ResetHeight();
+                ReloadPreview();
+            };
+            #endregion Size
+            //Sinrise end
+
             #region Skin
 
             Skin.OnValueChanged += _ =>
@@ -271,6 +323,7 @@ namespace Content.Client.Lobby.UI
             };
 
             RgbSkinColorContainer.AddChild(_rgbSkinColorSelector = new ColorSelectorSliders());
+            _rgbSkinColorSelector.SelectorType = ColorSelectorSliders.ColorSelectorType.Hsv; // defaults color selector to HSV
             _rgbSkinColorSelector.OnColorChanged += _ =>
             {
                 OnSkinColorOnValueChanged();
@@ -526,7 +579,7 @@ namespace Content.Client.Lobby.UI
         /// </summary>
         public void RefreshTraits()
         {
-            TraitsList.DisposeAllChildren();
+            TraitsList.RemoveAllChildren();
 
             var traits = _prototypeManager.EnumeratePrototypes<TraitPrototype>().OrderBy(t => Loc.GetString(t.Name)).ToList();
             TabContainer.SetTabTitle(3, Loc.GetString("humanoid-profile-editor-traits-tab"));
@@ -642,6 +695,7 @@ namespace Content.Client.Lobby.UI
             _species.Clear();
 
             _species.AddRange(_prototypeManager.EnumeratePrototypes<SpeciesPrototype>().Where(o => o.RoundStart));
+            _species.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.CurrentCultureIgnoreCase));
             var speciesIds = _species.Select(o => o.ID).ToList();
 
             for (var i = 0; i < _species.Count; i++)
@@ -678,7 +732,7 @@ namespace Content.Client.Lobby.UI
 
         public void RefreshAntags()
         {
-            AntagList.DisposeAllChildren();
+            AntagList.RemoveAllChildren();
             var items = new[]
             {
                 ("humanoid-profile-editor-antag-preference-yes-button", 0),
@@ -706,16 +760,10 @@ namespace Content.Client.Lobby.UI
                 selector.Setup(items, title, 300, description, guides: antag.Guides); // Sunrise-edit
                 selector.Select(Profile?.AntagPreferences.Contains(antag.ID) == true ? 0 : 1);
 
-                var requirements = _entManager.System<SharedRoleSystem>().GetAntagRequirement(antag);
-                var antagAllSelection = Loc.GetString("ban-panel-role-selection-antag-all-option");
-
-                if (_requirements.IsAntagBanned(new[] { $"Antag:{antag.ID}", $"Antag:{antagAllSelection}" }, out var banReason, out var expirationTime))
-                {
-                    selector.LockDueToBan(banReason, expirationTime);
-                    Profile = Profile?.WithAntagPreference(antag.ID, false);
-                    SetDirty();
-                }
-                else if (!_requirements.CheckRoleRequirements(requirements, antag.ID, (HumanoidCharacterProfile?)_preferencesManager.Preferences?.SelectedCharacter, out var reason)) // Sunrise-Sponsors
+                if (!_requirements.IsAllowed(
+                        antag,
+                        (HumanoidCharacterProfile?)_preferencesManager.Preferences?.SelectedCharacter,
+                        out var reason))
                 {
                     selector.LockRequirements(reason);
                     Profile = Profile?.WithAntagPreference(antag.ID, false);
@@ -733,6 +781,14 @@ namespace Content.Client.Lobby.UI
                 };
 
                 antagContainer.AddChild(selector);
+
+                antagContainer.AddChild(new Button()
+                {
+                    Disabled = true,
+                    Text = Loc.GetString("loadout-window"),
+                    HorizontalAlignment = HAlignment.Right,
+                    Margin = new Thickness(3f, 0f, 0f, 0f),
+                });
 
                 AntagList.AddChild(antagContainer);
             }
@@ -805,6 +861,7 @@ namespace Content.Client.Lobby.UI
             UpdateFlavorTextEdit();
             UpdateSexControls();
             UpdateGenderControls();
+            UpdateSizeControls(); //Sunrise edit
             UpdateSkinColor();
             UpdateSpawnPriorityControls();
             UpdateAgeEdit();
@@ -816,6 +873,7 @@ namespace Content.Client.Lobby.UI
             UpdateHairPickers();
             UpdateCMarkingsHair();
             UpdateCMarkingsFacialHair();
+            UpdateGradientControls(); //Sunrise: Ensure gradient controls are updated
 
             RefreshAntags();
             RefreshJobs();
@@ -856,9 +914,9 @@ namespace Content.Client.Lobby.UI
             var species = Profile?.Species ?? SharedHumanoidAppearanceSystem.DefaultSpecies;
             var page = DefaultSpeciesGuidebook;
             if (_prototypeManager.HasIndex<GuideEntryPrototype>(species))
-                page = species;
+                page = new ProtoId<GuideEntryPrototype>(species.Id); // Gross. See above todo comment.
 
-            if (_prototypeManager.TryIndex<GuideEntryPrototype>(DefaultSpeciesGuidebook, out var guideRoot))
+            if (_prototypeManager.Resolve(DefaultSpeciesGuidebook, out var guideRoot))
             {
                 var dict = new Dictionary<ProtoId<GuideEntryPrototype>, GuideEntry>();
                 dict.Add(DefaultSpeciesGuidebook, guideRoot);
@@ -872,7 +930,7 @@ namespace Content.Client.Lobby.UI
         /// </summary>
         public void RefreshJobs()
         {
-            JobList.DisposeAllChildren();
+            JobList.RemoveAllChildren();
             _jobCategories.Clear();
             _jobPriorities.Clear();
             var firstCategory = true;
@@ -989,11 +1047,7 @@ namespace Content.Client.Lobby.UI
                     icon.Texture = _sprite.Frame0(jobIcon.Icon);
                     selector.Setup(items, job.LocalizedName, 200, job.LocalizedDescription, icon, job.Guides);
 
-                    if (_requirements.IsRoleBanned(new[] { $"Job:{job.ID}" }, out var banReason, out var expirationTime))
-                    {
-                        selector.LockDueToBan(banReason, expirationTime);
-                    }
-                    else if (!_requirements.IsAllowed(job, (HumanoidCharacterProfile?)_preferencesManager.Preferences?.SelectedCharacter, out var reason, true))
+                    if (!_requirements.IsAllowed(job, (HumanoidCharacterProfile?)_preferencesManager.Preferences?.SelectedCharacter, out var reason))
                     {
                         selector.LockRequirements(reason);
                     }
@@ -1092,7 +1146,7 @@ namespace Content.Client.Lobby.UI
 
             _loadoutWindow = new LoadoutWindow(Profile, roleLoadout, roleLoadoutProto, _playerManager.LocalSession, collection, _sponsorsMgr)
             {
-                Title = Loc.GetString($"{jobProto?.ID}-loadout"),
+                Title = Loc.GetString("loadout-window-title-loadout", ("job", $"{jobProto?.LocalizedName}")),
             };
 
             // Refresh the buttons etc.
@@ -1160,10 +1214,11 @@ namespace Content.Client.Lobby.UI
             if (Profile is null) return;
 
             var skin = _prototypeManager.Index<SpeciesPrototype>(Profile.Species).SkinColoration;
+            var strategy = _prototypeManager.Index(skin).Strategy;
 
-            switch (skin)
+            switch (strategy.InputType)
             {
-                case HumanoidSkinColor.HumanToned:
+                case SkinColorationStrategyInput.Unary:
                 {
                     if (!Skin.Visible)
                     {
@@ -1171,39 +1226,14 @@ namespace Content.Client.Lobby.UI
                         RgbSkinColorContainer.Visible = false;
                     }
 
-                    var color = SkinColor.HumanSkinTone((int) Skin.Value);
-
-                    Markings.CurrentSkinColor = color;
-                    Profile = Profile.WithCharacterAppearance(Profile.Appearance.WithSkinColor(color));//
-                    break;
-                }
-                case HumanoidSkinColor.Hues:
-                {
-                    if (!RgbSkinColorContainer.Visible)
-                    {
-                        Skin.Visible = false;
-                        RgbSkinColorContainer.Visible = true;
-                    }
-
-                    Markings.CurrentSkinColor = _rgbSkinColorSelector.Color;
-                    Profile = Profile.WithCharacterAppearance(Profile.Appearance.WithSkinColor(_rgbSkinColorSelector.Color));
-                    break;
-                }
-                case HumanoidSkinColor.TintedHues:
-                {
-                    if (!RgbSkinColorContainer.Visible)
-                    {
-                        Skin.Visible = false;
-                        RgbSkinColorContainer.Visible = true;
-                    }
-
-                    var color = SkinColor.TintedHues(_rgbSkinColorSelector.Color);
+                    var color = strategy.FromUnary(Skin.Value);
 
                     Markings.CurrentSkinColor = color;
                     Profile = Profile.WithCharacterAppearance(Profile.Appearance.WithSkinColor(color));
+
                     break;
                 }
-                case HumanoidSkinColor.VoxFeathers:
+                case SkinColorationStrategyInput.Color:
                 {
                     if (!RgbSkinColorContainer.Visible)
                     {
@@ -1211,21 +1241,13 @@ namespace Content.Client.Lobby.UI
                         RgbSkinColorContainer.Visible = true;
                     }
 
-                    var color = SkinColor.ClosestVoxColor(_rgbSkinColorSelector.Color);
+                    var color = strategy.ClosestSkinColor(_rgbSkinColorSelector.Color);
 
                     Markings.CurrentSkinColor = color;
                     Profile = Profile.WithCharacterAppearance(Profile.Appearance.WithSkinColor(color));
+
                     break;
                 }
-                // Sunrise-start
-                case HumanoidSkinColor.None:
-                {
-                    Skin.Visible = false;
-                    RgbSkinColorContainer.Visible = false;
-                    _rgbSkinColorSelector.Color = Color.Transparent;
-                    break;
-                }
-                // Sunrise-end
             }
 
             ReloadProfilePreview();
@@ -1291,6 +1313,67 @@ namespace Content.Client.Lobby.UI
             ReloadPreview();
         }
 
+        private void UpdateSizeText()
+        {
+            if (Profile is null || !_prototypeManager.TryIndex<SpeciesPrototype>(Profile.Species, out var speciesPrototype))
+            {
+                return;
+            }
+
+            var heightRaw = HeightSlider.Value;
+            var weightRaw = WidthSlider.Value;
+
+            var height = ConvertSliderToHeight(
+                sliderValue: heightRaw,
+                minSlider: speciesPrototype.MinHeight,
+                maxSlider: speciesPrototype.MaxHeight,
+                minHeightCm: speciesPrototype.MinHeightCm,
+                maxHeightCm: speciesPrototype.MaxHeightCm
+            );
+
+            var weight = speciesPrototype.StandardWeight + speciesPrototype.StandardDensity * (weightRaw * heightRaw - 1);
+            HeightDescribeLabel.Text = Loc.GetString("humanoid-profile-editor-height-label", ("height", Math.Round(height)));
+            WidthDescribeLabel.Text = Loc.GetString("humanoid-profile-editor-width-label", ("weight", Math.Round(weight)));
+        }
+
+        private float ConvertSliderToHeight(float sliderValue, float minSlider, float maxSlider, float minHeightCm, float maxHeightCm)
+        {
+            var denom = maxSlider - minSlider;
+            if (MathF.Abs(denom) < 0.0001f)
+                return minHeightCm;
+
+            var normalized = (sliderValue - minSlider) / denom;
+            normalized = MathF.Min(1f, MathF.Max(0f, normalized));
+            return minHeightCm + normalized * (maxHeightCm - minHeightCm);
+        }
+
+        private void SetWidth(float newWidth)
+        {
+            if (Profile is null)
+            {
+                return;
+            }
+
+            Profile.Appearance = Profile.Appearance.WithWidth(newWidth);
+
+            UpdateSizeText();
+            ReloadPreview();
+        }
+
+        private void SetHeight(float newHeight)
+        {
+            if (Profile is null)
+            {
+                return;
+            }
+
+            Profile.Appearance = Profile.Appearance.WithHeight(newHeight);
+
+            UpdateSizeText();
+            ReloadPreview();
+        }
+        //Sunrise end
+
         // Sunrise-TTS-Start
         private void SetVoice(string newVoice)
         {
@@ -1311,6 +1394,7 @@ namespace Content.Client.Lobby.UI
             UpdateSexControls(); // update sex for new species
             UpdateBodyTypes();
             UpdateSpeciesGuidebookIcon();
+            ResetSize();
             ReloadPreview();
         }
 
@@ -1384,7 +1468,7 @@ namespace Content.Client.Lobby.UI
             var sexes = new List<Sex>();
 
             // add species sex options, default to just none if we are in bizzaro world and have no species
-            if (_prototypeManager.TryIndex<SpeciesPrototype>(Profile.Species, out var speciesProto))
+            if (_prototypeManager.Resolve<SpeciesPrototype>(Profile.Species, out var speciesProto))
             {
                 foreach (var sex in speciesProto.Sexes)
                 {
@@ -1408,16 +1492,85 @@ namespace Content.Client.Lobby.UI
                 SexButton.SelectId((int) sexes[0]);
         }
 
+        //Sunrise start
+
+        private void ResetWidth()
+        {
+            if (Profile is null || !_prototypeManager.TryIndex<SpeciesPrototype>(Profile.Species, out var speciesPrototype))
+            {
+                return;
+            }
+
+            var defaultWidth = speciesPrototype.DefaultWidth;
+
+            WidthSlider.MinValue = speciesPrototype.MinWidth;
+            WidthSlider.MaxValue = speciesPrototype.MaxWidth;
+            WidthSlider.Value = defaultWidth;
+
+            Profile.Appearance = Profile.Appearance.WithWidth(defaultWidth);
+
+            UpdateSizeText();
+        }
+
+        private void ResetHeight()
+        {
+            if (Profile is null || !_prototypeManager.TryIndex<SpeciesPrototype>(Profile.Species, out var speciesPrototype))
+            {
+                return;
+            }
+
+            var defaultHeight = speciesPrototype.DefaultHeight;
+
+            HeightSlider.MinValue = speciesPrototype.MinHeight;
+            HeightSlider.MaxValue = speciesPrototype.MaxHeight;
+            HeightSlider.Value = defaultHeight;
+
+            Profile.Appearance = Profile.Appearance.WithHeight(defaultHeight);
+
+            UpdateSizeText();
+        }
+
+        private void ResetSize()
+        {
+            if (Profile is null || !_prototypeManager.TryIndex<SpeciesPrototype>(Profile.Species, out var speciesPrototype))
+            {
+                return;
+            }
+
+            ResetWidth();
+            ResetHeight();
+        }
+
+        private void UpdateSizeControls()
+        {
+            if (Profile is null || !_prototypeManager.TryIndex<SpeciesPrototype>(Profile.Species, out var speciesPrototype))
+            {
+                return;
+            }
+
+            WidthSlider.MinValue = speciesPrototype.MinWidth;
+            WidthSlider.MaxValue = speciesPrototype.MaxWidth;
+            WidthSlider.Value = Profile.Appearance.Width;
+
+            HeightSlider.MinValue = speciesPrototype.MinHeight;
+            HeightSlider.MaxValue = speciesPrototype.MaxHeight;
+            HeightSlider.Value = Profile.Appearance.Height;
+
+            UpdateSizeText();
+        }
+        //Sunrise end
+
         private void UpdateSkinColor()
         {
             if (Profile == null)
                 return;
 
             var skin = _prototypeManager.Index<SpeciesPrototype>(Profile.Species).SkinColoration;
+            var strategy = _prototypeManager.Index(skin).Strategy;
 
-            switch (skin)
+            switch (strategy.InputType)
             {
-                case HumanoidSkinColor.HumanToned:
+                case SkinColorationStrategyInput.Unary:
                 {
                     if (!Skin.Visible)
                     {
@@ -1425,11 +1578,11 @@ namespace Content.Client.Lobby.UI
                         RgbSkinColorContainer.Visible = false;
                     }
 
-                    Skin.Value = SkinColor.HumanSkinToneFromColor(Profile.Appearance.SkinColor);
+                    Skin.Value = strategy.ToUnary(Profile.Appearance.SkinColor);
 
                     break;
                 }
-                case HumanoidSkinColor.Hues:
+                case SkinColorationStrategyInput.Color:
                 {
                     if (!RgbSkinColorContainer.Visible)
                     {
@@ -1437,45 +1590,11 @@ namespace Content.Client.Lobby.UI
                         RgbSkinColorContainer.Visible = true;
                     }
 
-                    // set the RGB values to the direct values otherwise
-                    _rgbSkinColorSelector.Color = Profile.Appearance.SkinColor;
-                    break;
-                }
-                case HumanoidSkinColor.TintedHues:
-                {
-                    if (!RgbSkinColorContainer.Visible)
-                    {
-                        Skin.Visible = false;
-                        RgbSkinColorContainer.Visible = true;
-                    }
-
-                    // set the RGB values to the direct values otherwise
-                    _rgbSkinColorSelector.Color = Profile.Appearance.SkinColor;
-                    break;
-                }
-                case HumanoidSkinColor.VoxFeathers:
-                {
-                    if (!RgbSkinColorContainer.Visible)
-                    {
-                        Skin.Visible = false;
-                        RgbSkinColorContainer.Visible = true;
-                    }
-
-                    _rgbSkinColorSelector.Color = SkinColor.ClosestVoxColor(Profile.Appearance.SkinColor);
+                    _rgbSkinColorSelector.Color = strategy.ClosestSkinColor(Profile.Appearance.SkinColor);
 
                     break;
                 }
-                // Sunrise-start
-                case HumanoidSkinColor.None:
-                {
-                    Skin.Visible = false;
-                    RgbSkinColorContainer.Visible = false;
-                    _rgbSkinColorSelector.Color = Color.Transparent;
-                    break;
-                }
-                // Sunrise-end
             }
-
         }
 
         public void UpdateSpeciesGuidebookIcon()
@@ -1486,7 +1605,7 @@ namespace Content.Client.Lobby.UI
             if (species is null)
                 return;
 
-            if (!_prototypeManager.TryIndex<SpeciesPrototype>(species, out var speciesProto))
+            if (!_prototypeManager.Resolve<SpeciesPrototype>(species, out var speciesProto))
                 return;
 
             // Don't display the info button if no guide entry is found
@@ -1535,17 +1654,13 @@ namespace Content.Client.Lobby.UI
             {
                 return;
             }
-            var hairMarking = Profile.Appearance.HairStyleId switch
-            {
-                HairStyles.DefaultHairStyle => new List<Marking>(),
-                _ => new() { new(Profile.Appearance.HairStyleId, new List<Color>() { Profile.Appearance.HairColor }) },
-            };
+            var hairMarking = Profile.Appearance.HairStyleId == HairStyles.DefaultHairStyle
+                ? new List<Marking>()
+                : new() { new(Profile.Appearance.HairStyleId, new List<Color>() { Profile.Appearance.HairColor }) };
 
-            var facialHairMarking = Profile.Appearance.FacialHairStyleId switch
-            {
-                HairStyles.DefaultFacialHairStyle => new List<Marking>(),
-                _ => new() { new(Profile.Appearance.FacialHairStyleId, new List<Color>() { Profile.Appearance.FacialHairColor }) },
-            };
+            var facialHairMarking = Profile.Appearance.FacialHairStyleId == HairStyles.DefaultFacialHairStyle
+                ? new List<Marking>()
+                : new() { new(Profile.Appearance.FacialHairStyleId, new List<Color>() { Profile.Appearance.FacialHairColor }) };
 
             HairStylePicker.UpdateData(
                 hairMarking,
@@ -1555,6 +1670,9 @@ namespace Content.Client.Lobby.UI
                 facialHairMarking,
                 Profile.Species,
                 1);
+
+            // Sunrise start: Apply gradient toggles to UI controls if they exist
+            UpdateGradientControls(); //Sunrise end
         }
 
         private void UpdateCMarkingsHair()
@@ -1584,7 +1702,9 @@ namespace Content.Client.Lobby.UI
             }
             if (hairColor != null)
             {
-                Markings.HairMarking = new (Profile.Appearance.HairStyleId, new List<Color>() { hairColor.Value });
+                Markings.HairMarking = new (
+                    Profile.Appearance.HairStyleId,
+                    new List<Color>() { hairColor.Value });
             }
             else
             {
@@ -1618,7 +1738,9 @@ namespace Content.Client.Lobby.UI
             }
             if (facialHairColor != null)
             {
-                Markings.FacialHairMarking = new (Profile.Appearance.FacialHairStyleId, new List<Color>() { facialHairColor.Value });
+                Markings.FacialHairMarking = new(
+                    Profile.Appearance.FacialHairStyleId,
+                    new List<Color>() { facialHairColor.Value });
             }
             else
             {
@@ -1692,7 +1814,7 @@ namespace Content.Client.Lobby.UI
                 return;
 
             StartExport();
-            await using var file = await _dialogManager.OpenFile(new FileDialogFilters(new FileDialogFilters.Group("yml")));
+            await using var file = await _dialogManager.OpenFile(new FileDialogFilters(new FileDialogFilters.Group("yml")), FileAccess.Read);
 
             if (file == null)
             {
@@ -1793,7 +1915,189 @@ namespace Content.Client.Lobby.UI
             }
 
             CBodyTypesButton.Select(_bodyTypes.FindIndex(x => x.ID == Profile.BodyType));
-            IsDirty = true;
         }
+
+        //Sunrise start - Hair gradient initialization methods
+        private void InitializeHairGradientControls()
+        {
+            // Initialize hair gradient direction selector
+            HairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-bottom-top"), 0);
+            HairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-top-bottom"), 1);
+            HairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-left-right"), 2);
+            HairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-right-left"), 3);
+
+            // Initialize facial hair gradient direction selector
+            FacialHairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-bottom-top"), 0);
+            FacialHairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-top-bottom"), 1);
+            FacialHairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-left-right"), 2);
+            FacialHairGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-right-left"), 3);
+
+            // Hair gradient toggle
+            HairGradientToggle.OnToggled += args =>
+            {
+                if (Profile is null)
+                    return;
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithHairGradientEnabled(args.Pressed));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // Hair gradient secondary color
+            HairGradientSecondColorSelector.OnColorChanged += newColor =>
+            {
+                if (Profile is null)
+                    return;
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithHairGradientSecondaryColor(newColor));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // Hair gradient direction
+            HairGradientDirectionSelector.OnItemSelected += args =>
+            {
+                if (Profile is null)
+                    return;
+                HairGradientDirectionSelector.SelectId(args.Id);
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithHairGradientDirection(args.Id));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // Facial hair gradient toggle
+            FacialHairGradientToggle.OnToggled += args =>
+            {
+                if (Profile is null)
+                    return;
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithFacialHairGradientEnabled(args.Pressed));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // Facial hair gradient secondary color
+            FacialHairGradientSecondColorSelector.OnColorChanged += newColor =>
+            {
+                if (Profile is null)
+                    return;
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithFacialHairGradientSecondaryColor(newColor));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // Facial hair gradient direction
+            FacialHairGradientDirectionSelector.OnItemSelected += args =>
+            {
+                if (Profile is null)
+                    return;
+                FacialHairGradientDirectionSelector.SelectId(args.Id);
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithFacialHairGradientDirection(args.Id));
+                SetDirty();
+                ReloadPreview();
+            };
+        }
+
+        private void InitializeAllMarkingsGradientControls()
+        {
+            // Initialize all markings gradient direction selector
+            AllMarkingsGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-bottom-top"), 0);
+            AllMarkingsGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-top-bottom"), 1);
+            AllMarkingsGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-left-right"), 2);
+            AllMarkingsGradientDirectionSelector.AddItem(Loc.GetString("humanoid-profile-editor-hair-gradient-dir-right-left"), 3);
+
+            // All markings gradient toggle
+            AllMarkingsGradientToggle.OnToggled += args =>
+            {
+                if (Profile is null)
+                    return;
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithAllMarkingsGradientEnabled(args.Pressed));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // All markings gradient secondary color
+            AllMarkingsGradientSecondColorSelector.OnColorChanged += newColor =>
+            {
+                if (Profile is null)
+                    return;
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithAllMarkingsGradientSecondaryColor(newColor));
+                SetDirty();
+                ReloadPreview();
+            };
+
+            // All markings gradient direction
+            AllMarkingsGradientDirectionSelector.OnItemSelected += args =>
+            {
+                if (Profile is null)
+                    return;
+                AllMarkingsGradientDirectionSelector.SelectId(args.Id);
+                Profile = Profile.WithCharacterAppearance(
+                    Profile.Appearance.WithAllMarkingsGradientDirection(args.Id));
+                SetDirty();
+                ReloadPreview();
+            };
+        }
+
+        private void UpdateGradientControls()
+        {
+            if (Profile == null)
+                return;
+
+            try
+            {
+                // Hair gradient controls
+                if (HairGradientToggle != null)
+                {
+                    HairGradientToggle.Pressed = Profile.Appearance.HairGradientEnabled;
+                }
+                if (HairGradientSecondColorSelector != null)
+                {
+                    HairGradientSecondColorSelector.Color = Profile.Appearance.HairGradientSecondaryColor;
+                }
+                if (HairGradientDirectionSelector != null)
+                {
+                    HairGradientDirectionSelector.SelectId(Profile.Appearance.HairGradientDirection);
+                }
+
+                // Facial hair gradient controls
+                if (FacialHairGradientToggle != null)
+                {
+                    FacialHairGradientToggle.Pressed = Profile.Appearance.FacialHairGradientEnabled;
+                }
+                if (FacialHairGradientSecondColorSelector != null)
+                {
+                    FacialHairGradientSecondColorSelector.Color = Profile.Appearance.FacialHairGradientSecondaryColor;
+                }
+                if (FacialHairGradientDirectionSelector != null)
+                {
+                    FacialHairGradientDirectionSelector.SelectId(Profile.Appearance.FacialHairGradientDirection);
+                }
+
+                // All markings gradient controls
+                if (AllMarkingsGradientToggle != null)
+                {
+                    AllMarkingsGradientToggle.Pressed = Profile.Appearance.AllMarkingsGradientEnabled;
+                }
+                if (AllMarkingsGradientSecondColorSelector != null)
+                {
+                    AllMarkingsGradientSecondColorSelector.Color = Profile.Appearance.AllMarkingsGradientSecondaryColor;
+                }
+                if (AllMarkingsGradientDirectionSelector != null)
+                {
+                    AllMarkingsGradientDirectionSelector.SelectId(Profile.Appearance.AllMarkingsGradientDirection);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Sunrise: Ошибка при обновлении градиентных контролов: {ex}");
+            }
+        }
+        //Sunrise end
     }
 }

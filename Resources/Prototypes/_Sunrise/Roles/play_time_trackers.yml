@@ -23,6 +23,9 @@
   id: JobBlueShieldEnsign
 
 - type: playTimeTracker
+  id: JobBlueShieldOperative
+
+- type: playTimeTracker
   id: JobNtrGuard
 
 - type: playTimeTracker
@@ -53,6 +56,12 @@
   id: JobSecurityPilot
 
 - type: playTimeTracker
+  id: JobHeadOfPrison
+
+- type: playTimeTracker
+  id: JobPrisonInspector
+
+- type: playTimeTracker
   id: JobPrisonChef
 
 - type: playTimeTracker
@@ -68,13 +77,13 @@
   id: JobPrisonDoctor
 
 - type: playTimeTracker
-  id: JobHeadOfPrison
-
-- type: playTimeTracker
   id: JobPrisoner
 
 - type: playTimeTracker
   id: JobPrisonEngineer
+
+- type: playTimeTracker
+  id: JobPrisonScientist
 
 - type: playTimeTracker
   id: JobEngineerBorg
@@ -135,3 +144,9 @@
 
 - type: playTimeTracker
   id: AbductorTimeTracker
+
+- type: playTimeTracker
+  id: AbductorVictimTracker
+
+- type: playTimeTracker
+  id: JobComMaid

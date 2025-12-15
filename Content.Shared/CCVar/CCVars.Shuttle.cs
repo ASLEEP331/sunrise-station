@@ -86,13 +86,13 @@ public sealed partial class CCVars
     ///     How long a shuttle spends in FTL.
     /// </summary>
     public static readonly CVarDef<float> FTLTravelTime =
-        CVarDef.Create("shuttle.travel_time", 60f, CVar.SERVERONLY);
+        CVarDef.Create("shuttle.travel_time", 30f, CVar.SERVERONLY); // Sunrise-Edit
 
     /// <summary>
     ///     How long the final stage of FTL before arrival should be.
     /// </summary>
     public static readonly CVarDef<float> FTLArrivalTime =
-        CVarDef.Create("shuttle.arrival_time", 20f, CVar.SERVERONLY);
+        CVarDef.Create("shuttle.arrival_time", 2f, CVar.SERVERONLY); // Sunrise-Edit
 
     /// <summary>
     ///     How much time needs to pass before a shuttle can FTL again.
@@ -117,7 +117,7 @@ public sealed partial class CCVars
     ///     Is the emergency shuttle allowed to be early launched.
     /// </summary>
     public static readonly CVarDef<bool> EmergencyEarlyLaunchAllowed =
-        CVarDef.Create("shuttle.emergency_early_launch_allowed", false, CVar.SERVERONLY);
+        CVarDef.Create("shuttle.emergency_early_launch_allowed", false, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     How long the emergency shuttle remains docked with the station, in seconds.
@@ -258,7 +258,7 @@ public sealed partial class CCVars
     /// </summary>
     [CVarControl(AdminFlags.VarEdit)]
     public static readonly CVarDef<float> ImpactSlowdown =
-        CVarDef.Create("shuttle.impact.slowdown", 4f, CVar.SERVERONLY); //Sunrise-Edit
+        CVarDef.Create("shuttle.impact.slowdown", 8f, CVar.SERVERONLY);
 
     /// <summary>
     /// Minimum velocity change from impact for special throw effects (e.g. stuns, beakers breaking) to occur

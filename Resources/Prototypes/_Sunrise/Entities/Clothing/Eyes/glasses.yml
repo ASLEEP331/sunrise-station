@@ -74,7 +74,7 @@
     - WhitelistChameleon
 
 - type: entity
-  parent: [BaseNightVisionDevice, ClothingEyesGlassesCheapSunglasses, PowerCellSlotSmallItem]
+  parent: [BaseNightVisionDevice, ClothingEyesGlassesSunglasses,ShowSecurityIcons, PowerCellSlotSmallItem]
   id: ClothingEyesGlassesNVG
   name: sun glasses
   description: A pair of black sunglasses.
@@ -102,7 +102,7 @@
         startingItem: PowerCellSmall
   - type: ToggleCellDraw
   - type: PowerCellDraw
-    drawRate: 0
+    drawRate: 3.5
     useRate: 20
   - type: ComponentToggler
     parent: true
@@ -122,6 +122,11 @@
   - type: Clothing
     sprite: _Sunrise/Clothing/Eyes/Glasses/synd_thermal.rsi
   - type: ShowSyndicateIcons
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: power-cell-slot-component-slot-name-default
+        startingItem: PowerCellSyndicate
 
 - type: entity
   parent: [ClothingEyesGlassesThermal, ShowSecurityIcons, BaseSecurityCommandContraband]
