@@ -1,3 +1,4 @@
+using Content.Server._Sunrise;
 using Content.Server._Sunrise.Contributors;
 using Content.Server._Sunrise.Entry;
 using Content.Server._Sunrise.PlayerCache;
@@ -11,7 +12,9 @@ using Content.Server.Afk;
 using Content.Server.Ani;
 using Content.Server.Chat.Managers;
 using Content.Server.Connection;
+using Content.Shared.Connection.IPBlocking;
 using Content.Server.Database;
+using Content.Server.Discord;
 using Content.Server.Discord.DiscordLink;
 using Content.Server.EUI;
 using Content.Server.GameTicking;
@@ -88,6 +91,9 @@ namespace Content.Server.Entry
         [Dependency] private readonly ContributorsManager _contributorsManager = default!; // Sunrise-Edit
         [Dependency] private readonly PlayerCacheManager _playerCacheManager = default!; // Sunrise-Edit
         [Dependency] private readonly TTSManager _ttsManager = default!; // Sunrise-Edit
+        [Dependency] private readonly NetTexturesManager _netTexturesManager = default!; // Sunrise-Edit
+        [Dependency] private readonly DiscordWebhook _discord = default!; // Sunrise-Edit
+        [Dependency] private readonly IIPBlockingSystem _ipBlockingSystem = default!;
         private ISharedSponsorsManager? _sponsorsManager; // Sunrise-Sponsors
 
         public override void PreInit()
@@ -140,11 +146,14 @@ namespace Content.Server.Entry
             _serverInfo.Initialize();
             _serverApi.Initialize();
 
-            // Sunrise-Sponsors-Start
-            _ttsManager.Initialize(); // Sunrise-Edit
+            // Sunrise-Start
+            _ttsManager.Initialize();
+            _netTexturesManager.Initialize();
+            _ipBlockingSystem.Initialize();
             SunriseServerEntry.Init();
             IoCManager.Instance!.TryResolveType(out _sponsorsManager);
-            // Sunrise-Sponsors-End
+            _discord.SetupClient();
+            // Sunrise-End
 
             _voteManager.Initialize();
             _updateManager.Initialize();
@@ -215,9 +224,12 @@ namespace Content.Server.Entry
                     _playTimeTracking.Update();
                     _watchlistWebhookManager.Update();
                     _connection.Update();
-                    _serversHubManager.Update(); // Sunrise-Edit
-                    _contributorsManager.Update(); // Sunrise-Edit
-                    _sponsorsManager?.Update(); // Sunrise-Edit
+                    // Sunrise-Start
+                    _serversHubManager.Update();
+                    _contributorsManager.Update();
+                    _sponsorsManager?.Update();
+                    _ipBlockingSystem.Update();
+                    // Sunrise-End
                     break;
             }
         }
@@ -236,6 +248,10 @@ namespace Content.Server.Entry
             // TODO Should this be awaited?
             _discordLink.Shutdown();
             _discordChatLink.Shutdown();
+
+            // Sunrise added start
+            _discord.Dispose();
+            // Sunrise added end
         }
 
         private static void LoadConfigPresets(IConfigurationManager cfg, IResourceManager res, ISawmill sawmill)

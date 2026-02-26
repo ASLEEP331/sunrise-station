@@ -81,6 +81,15 @@
   - ShuttleGunFriendshipCircuitboard
   - ShuttleGunPerforatorCircuitboard
   - ShuttleGunSvalinnMachineGunCircuitboard
+  # Sunrise-Start
+  - ShuttleGunLongbowCircuitboard
+  - ShuttleGunVympelCircuitboard
+  - ShuttleGunSquallCircuitboard
+  - ShuttleGunQuadlingCircuitboard
+  - ShuttleGunBeamstormMachineGunCircuitboard
+  - ShuttleGunTeslaOrionCircuitboard
+  - ShuttleGunTeslaHyperionCircuitboard
+  # Sunrise-End
 
 - type: latheRecipePack
   parent:
@@ -119,8 +128,8 @@
   - MagazinePistolSubMachineGunUranium
   - MagazineRifleIncendiary
   - MagazineRifleUranium
-  - MagazineShotgunBeanbag
-  - MagazineShotgunIncendiary
+  #- MagazineShotgunBeanbag # Sunrise-Edit
+  #- MagazineShotgunIncendiary # Sunrise-Edit
   - SpeedLoaderMagnumIncendiary
   - SpeedLoaderMagnumUranium
 

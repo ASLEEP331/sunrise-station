@@ -109,11 +109,6 @@ namespace Content.IntegrationTests.Tests
                     .ToList();
                 foreach (var protoId in protoIds)
                 {
-                    // Sunrise-Start
-                    if (protoId == "Envelope")
-                        continue;
-                    // Sunrise-End
-
                     entityMan.SpawnEntity(protoId, map.GridCoords);
                 }
             });
@@ -246,6 +241,10 @@ namespace Content.IntegrationTests.Tests
                 "MapGrid",
                 "StationEvent",
                 "TimedDespawn",
+
+                // Sunrise added start
+                "StationTransitHub",
+                // Sunrise added end
 
                 // makes an announcement on mapInit.
                 "AnnounceOnSpawn",

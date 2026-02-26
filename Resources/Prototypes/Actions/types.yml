@@ -148,10 +148,9 @@
     maxCharges: 3
   # Sunrise-Start
   - type: AutoRecharge
-    rechargeDuration: 120
+    rechargeDuration: 300
   # Sunrise-End
   - type: Action
-    useDelay: 5 # Sunrise-Edit
     checkCanInteract: false
     itemIconStyle: BigAction
     priority: -20
@@ -184,7 +183,7 @@
     maxCharges: 3
   # Sunrise-Start
   - type: AutoRecharge
-    rechargeDuration: 120
+    rechargeDuration: 600
   # Sunrise-End
   - type: Action
     checkCanInteract: false
@@ -194,28 +193,6 @@
     icon:
       sprite: Objects/Weapons/Grenades/empgrenade.rsi
       state: icon
-
-# Sunrise-Start  #PR Wiz #31782
-- type: entity
-  id: ActionActivateSmokeGrenadeImplant
-  name: Activate Smoke Grenade
-  description: Create a small cloud of smoke around you.
-  components:
-  - type: Action
-    checkCanInteract: false
-    useDelay: 5
-    itemIconStyle: BigAction
-    priority: -20
-    icon:
-      sprite: Objects/Weapons/Grenades/smoke.rsi
-      state: icon
-  - type: InstantAction
-    event: !type:ActivateImplantEvent
-  - type: LimitedCharges
-    maxCharges: 3
-  - type: AutoRecharge
-    rechargeDuration: 120
-# Sunrise-End
 
 - type: entity
   parent: BaseImplantAction
@@ -227,7 +204,7 @@
     maxCharges: 2
   # Sunrise-Start
   - type: AutoRecharge
-    rechargeDuration: 360
+    rechargeDuration: 600
   # Sunrise-End
   - type: Action
     checkCanInteract: false
@@ -303,6 +280,17 @@
     icon: { sprite: Interface/Actions/voice-mask.rsi, state: icon }
   - type: InstantAction
     event: !type:VoiceMaskSetNameEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionShootWater
+  name: Spray water!
+  description: Spray water towards your enemies.
+  components:
+  - type: Action
+    icon: { sprite: Clothing/Neck/Misc/pins.rsi, state: flower }
+  - type: InstantAction
+    event: !type:SprayLiquidEvent
 
 - type: entity
   parent: BaseAction
@@ -383,19 +371,6 @@
   - type: Action
     icon: { sprite: Objects/Fun/bikehorn.rsi, state: icon }
     useDelay: 1
-
-# Sunrise-Start
-- type: entity
-  parent: BaseImplantAction
-  id: ActionActivateBorgLaughImplant
-  name: "[color=red]Laugh[/color]"
-  description: Activates your creepy laugh implant, which will produce the signature sound of the Syndicate cyborg.
-  components:
-  - type: Action
-    icon: { sprite: Mobs/Species/Terminator/parts.rsi, state: skull_icon }
-    useDelay: 2.75
-    itemIconStyle: BigAction
-# Sunrise-End
 
 - type: entity
   parent: BaseAction
@@ -540,3 +515,13 @@
     icon: Interface/Actions/shop.png
   - type: InstantAction
     event: !type:IntrinsicStoreActionEvent
+
+- type: entity
+  parent: ActionChangeVoiceMask
+  id: ActionChangeVoiceMaskImplant
+  components:
+  - type: Action
+    icon: { sprite: Interface/Actions/voice-mask.rsi, state: icon }
+    itemIconStyle: BigAction
+
+
